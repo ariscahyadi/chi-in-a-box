@@ -14,9 +14,9 @@
 - name: Add glance backup cron jobs.
   cron:
     name: "{{ user_project_report_cron_name }}"
-    minute: "{{ user_project_report_cron_minute }}"
-    hour: "{{ user_project_report_cron_hour }}"
-    day: "{{ user_project_report_cron_day }}"
-    month: "{{ user_project_report_cron_month }}"
-    weekday: "{{ user_project_report_cron_weekday }}"
+    minute: "0"
+    hour: "3"
+    day: "*"
+    month: "*"
+    weekday: "*"
     job: "source {{ user_project_report_credentials }} && {{ user_project_report_cron_script }} && {{ cron_notification }} user_project_report"
