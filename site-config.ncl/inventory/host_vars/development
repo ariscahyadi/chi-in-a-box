@@ -1,0 +1,6 @@
+---
+# Initial assumption is that this is also the deployment node,
+# therefore any provisioning can be done locally.
+ansible_connection: local
+network_interface: enp2s0f0
+kolla_external_interface: enp2s0f1
