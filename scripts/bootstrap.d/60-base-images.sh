@@ -12,7 +12,7 @@ for image in CC-CentOS7; do
     log "Downloading image '$image'..."
     wget -O "$file" "https://chi.tacc.chameleoncloud.org:7480/swift/v1/CHI-in-a-Box_public/$file"
     log "Uploading to Glance..."
-    openstack image create --file "$file" --disk-format "qcow2" --public "$image"
+    openstack --insecure image create --file "$file" --disk-format "qcow2" --public "$image"
   fi
 done
 

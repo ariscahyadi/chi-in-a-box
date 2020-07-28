@@ -13,6 +13,8 @@ virtualenv: /etc/ansible/venv
 chameleon_portal_url: https://www.chameleoncloud.org
 
 enable_mariadb: yes
+database_address: "{{ kolla_internal_vip_address }}"
+use_preconfigured_databases: "no"
 enable_chrony: yes
 enable_fluentd: yes
 enable_memcached: yes

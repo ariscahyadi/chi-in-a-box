@@ -6,7 +6,7 @@ log "Looking for nodes in $NODE_CONF."
 log
 
 nodes="$(crudini --get "$NODE_CONF")"
-
+log "$nodes"
 node_config() {
   local node="$1"
   local key="$2"
@@ -41,9 +41,9 @@ update_node() {
   cmd_args+=(--property memory_mb=128000)
   cmd_args+=(--property local_gb=200)
 
-  node_uuid="$(openstack baremetal node show "$node" -f value -c uuid)" \
-    && (openstack baremetal node set "$node_uuid" "${cmd_args[@]}" >/dev/null && echo "$node_uuid") \
-    ||  openstack baremetal node create -f value -c uuid "${cmd_args[@]}"
+  node_uuid="$(openstack --insecure baremetal node show "$node" -f value -c uuid)" \
+    && (openstack --insecure baremetal node set "$node_uuid" "${cmd_args[@]}" >/dev/null && echo "$node_uuid") \
+    ||  openstack --insecure baremetal node create -f value -c uuid "${cmd_args[@]}"
 }
 
 create_node_port() {
@@ -56,18 +56,18 @@ create_node_port() {
 
   # This command will exit 0 even if there is no port found, need to check
   # actual output returned.
-  port_uuid="$(openstack baremetal port list --node "$node_uuid" -f value -c UUID)"
+  port_uuid="$(openstack --insecure baremetal port list --node "$node_uuid" -f value -c UUID)"
 
   # The create command does not properly return the UUID value, need to
   # create and then re-check.
   test -n "$port_uuid" && echo "$port_uuid" \
-    || (openstack baremetal port create \
+    || (openstack --insecure baremetal port create \
         --node "$node_uuid" \
         --local-link-connection switch_info="$switch_name" \
         --local-link-connection switch_id="00:00:00:00:00:00" \
         --local-link-connection port_id="$switch_port_id" \
         "$mac_address" >/dev/null \
-        && openstack baremetal port list --node "$node_uuid" -f value -c UUID)
+        && openstack --insecure baremetal port list --node "$node_uuid" -f value -c UUID)
 }
 
 create_blazar_host() {
@@ -85,8 +85,8 @@ create_blazar_host() {
 
 log "Ensuring baremetal flavor exists..."
 greatest_common_min_disk_size=20
-openstack flavor show baremetal 2>/dev/null \
-  || openstack flavor create \
+openstack --insecure flavor show baremetal 2>/dev/null \
+  || openstack --insecure flavor create \
       --public --ram 1 --vcpus 1 \
       --disk "$greatest_common_min_disk_size" \
       --property resources:CUSTOM_BAREMETAL=1 \
@@ -96,26 +96,26 @@ openstack flavor show baremetal 2>/dev/null \
       baremetal >/dev/null
 
 log "Ensuring freepool aggregate exists..."
-openstack aggregate show freepool 2>/dev/null \
-  || openstack aggregate create freepool >/dev/null
+openstack --insecure aggregate show freepool 2>/dev/null \
+  || openstack --insecure aggregate create freepool >/dev/null
 
 for node in $nodes; do
   log "Enrolling node $node..."
   node_uuid="$(update_node "$node")"
 
   log -e "\tPutting node in maintenance mode..."
-  openstack baremetal node maintenance set "$node_uuid"
+  openstack --insecure baremetal node maintenance set "$node_uuid"
 
   log -e "\tCreating network port..."
   port_uuid="$(create_node_port "$node" "$node_uuid")"
 
   log -e "\tEnabling SOL console redirection..."
-  openstack baremetal node console enable "$node_uuid"
+  openstack --insecure baremetal node console enable "$node_uuid"
 
   log -e "\tBringing node out of maintenance mode..."
-  openstack baremetal node maintenance unset "$node_uuid"
-  openstack baremetal node manage "$node_uuid"
-  openstack baremetal node provide "$node_uuid"
+  openstack --insecure baremetal node maintenance unset "$node_uuid"
+  openstack --insecure baremetal node manage "$node_uuid"
+  openstack --insecure baremetal node provide "$node_uuid"
 
   log -e "\tMaking node reservable..."
   create_blazar_host "$node" "$node_uuid"

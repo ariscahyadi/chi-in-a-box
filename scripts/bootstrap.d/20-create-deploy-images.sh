@@ -14,8 +14,8 @@ os_image_create() {
     wget -q "$file_base/$file"
   fi
 
-  openstack image show "$name" -f value -c id \
-   || openstack image create -f value -c id \
+  openstack --insecure image show "$name" -f value -c id \
+   || openstack --insecure image create -f value -c id \
       --public \
       --disk-format aki \
       --container-format aki \
